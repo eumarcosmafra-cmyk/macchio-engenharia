@@ -1,11 +1,13 @@
 """Gera as páginas estáticas do site da Macchio Engenharia.
 
 Uso:  python3 _build/build.py
-Lê _build/projetos.json e escreve index.html, projetos/index.html,
-projetos/<slug>/index.html, sitemap.xml e as imagens OG dos projetos.
+Lê _build/projetos.json e escreve as mesmas URLs do site atual (WordPress):
+  /  ·  /sobre/  ·  /servicos/  ·  /portfolio/  ·  /portfolio/<slug-original>/  ·  /contato/
+além de sitemap.xml e das imagens OG dos projetos.
 """
 import html
 import json
+import shutil
 from pathlib import Path
 from urllib.parse import quote
 
@@ -42,6 +44,11 @@ def two(n):
     return f"{n:02d}"
 
 
+def purl(p):
+    """URL da página do projeto: a mesma do site atual (/portfolio/<slug original>/)."""
+    return f"portfolio/{p['old_slug']}/"
+
+
 def city_uf(p):
     return f"{p['city']}/SC" if p["city"] else None
 
@@ -73,10 +80,13 @@ def img_tag(slug, file, prefix, alt, sizes, eager=False, vt=None, w=800, h=450):
     return f'<img src="{src}" srcset="{srcset}" sizes="{sizes}" width="{w}" height="{h}" {load} decoding="async" alt="{e(alt)}"{style}>'
 
 
+def cover_alt(p):
+    return f"Perspectiva 3D do projeto {p['name']}: {p['cover_alt'][0].lower()}{p['cover_alt'][1:]}"
+
+
 def cover_tag(p, prefix, sizes, eager=False, vt=True):
     c = p["renders"][0]
-    alt = f"Perspectiva 3D do projeto {p['name']}: {p['cover_alt'][0].lower()}{p['cover_alt'][1:]}"
-    return img_tag(p["slug"], c["file"], prefix, alt, sizes, eager=eager, vt=f"p-{p['slug']}" if vt else None, w=c["w"], h=c["h"])
+    return img_tag(p["slug"], c["file"], prefix, cover_alt(p), sizes, eager=eager, vt=f"p-{p['slug']}" if vt else None, w=c["w"], h=c["h"])
 
 
 # ---------- ícones ----------
@@ -96,12 +106,12 @@ def ic(name, cls=""):
     return f'<svg{c} aria-hidden="true"><use href="#{name}"/></svg>'
 
 
-def pill(label, href, cls="", track=None, whatsapp=False, extra=""):
+def pill(label, href, cls="", track=None, whatsapp=False):
     icon = "i-wa" if whatsapp else "i-arrow"
-    attrs = f' target="_blank" rel="noopener"' if whatsapp else ""
+    attrs = ' target="_blank" rel="noopener"' if whatsapp else ""
     tr = f' data-track="{track}"' if track else ""
     sr = '<span class="vh"> (abre o WhatsApp)</span>' if whatsapp else ""
-    return (f'<a class="pill {cls}" href="{href}"{attrs}{tr}{extra}>{label}{sr}'
+    return (f'<a class="pill {cls}" href="{href}"{attrs}{tr}>{label}{sr}'
             f'<span class="pill-ic" aria-hidden="true">{ic(icon)}{ic(icon)}</span></a>')
 
 
@@ -146,18 +156,16 @@ def head(prefix, title, desc, path, og_image, jsonld, preload=""):
 <body>"""
 
 
-NAV = [("projetos", "projetos/", "Projetos"), ("servicos", "#servicos", "Serviços"), ("como-funciona", "#como-funciona", "Como funciona"),
-       ("sobre", "#sobre", "Sobre"), ("contato", "#contato", "Contato")]
+# Menu igual ao do site atual: Início · Sobre a Empresa · Serviços · Portfólio · Contato · Orçamento
+NAV = [("inicio", "", "Início"), ("sobre", "sobre/", "Sobre a empresa"), ("servicos", "servicos/", "Serviços"),
+       ("portfolio", "portfolio/", "Portfólio"), ("contato", "contato/", "Contato")]
 
 
-def nav_href(prefix, href):
-    return f"{prefix}{href}" if not href.startswith("#") else f"{prefix or './'}{href}"
-
-
-def header(prefix, current="", solid=False):
+def header(prefix, current="", solid=True):
     home = prefix or "./"
-    nav = "\n        ".join(f'<a href="{nav_href(prefix, h)}"{" aria-current=\"page\"" if k == current else ""}>{t}</a>' for k, h, t in NAV)
-    menu_links = "\n      ".join(f'<a href="{nav_href(prefix, h)}"><span>{two(i)}</span>{t}</a>' for i, (k, h, t) in enumerate(NAV, 1))
+    nav = "\n        ".join(f'<a href="{(prefix + h) if h else home}"{" aria-current=\"page\"" if k == current else ""}>{t}</a>' for k, h, t in NAV)
+    menu_links = "\n      ".join(f'<a href="{(prefix + h) if h else home}"{" aria-current=\"page\"" if k == current else ""}><span>{two(i)}</span>{t}</a>'
+                                 for i, (k, h, t) in enumerate(NAV, 1))
     return f"""{ICONS}
   <a class="skip" href="#conteudo">Pular para o conteúdo</a>
   <header class="hd" data-header{" data-solid" if solid else ""}>
@@ -166,7 +174,7 @@ def header(prefix, current="", solid=False):
       <nav class="hd-nav" aria-label="Principal">
         {nav}
       </nav>
-      {pill("Fale conosco", f"{home}#contato", "pill--light pill--sm hd-cta", "header_contato")}
+      {pill("Orçamento", f"{prefix}contato/", "pill--light pill--sm hd-cta", "header_orcamento")}
       <button class="hd-menu" type="button" data-menu-open aria-expanded="false" aria-haspopup="dialog">Menu <i aria-hidden="true"></i></button>
     </div>
   </header>
@@ -179,7 +187,7 @@ def header(prefix, current="", solid=False):
       {menu_links}
     </nav>
     <div class="wrap menu-foot">
-      {pill("Conversar no WhatsApp", wa("Olá! Gostaria de conversar com a equipe da Macchio."), "pill--light", "whatsapp_menu", whatsapp=True)}
+      {pill("Pedir orçamento", f"{prefix}contato/", "pill--light", "menu_orcamento")}
       <p>{PHONE} · {EMAIL}<br>{ADDRESS}</p>
     </div>
   </dialog>"""
@@ -198,11 +206,11 @@ def footer(prefix):
         <div>
           <h2 class="label label--light">Navegação</h2>
           <ul>
-            <li><a href="{prefix}projetos/">Projetos</a></li>
-            <li><a href="{home}#servicos">Serviços</a></li>
-            <li><a href="{home}#como-funciona">Como funciona</a></li>
-            <li><a href="{home}#sobre">Sobre</a></li>
-            <li><a href="{home}#perguntas">Perguntas frequentes</a></li>
+            <li><a href="{home}">Início</a></li>
+            <li><a href="{prefix}sobre/">Sobre a empresa</a></li>
+            <li><a href="{prefix}servicos/">Serviços</a></li>
+            <li><a href="{prefix}portfolio/">Portfólio</a></li>
+            <li><a href="{prefix}contato/">Contato</a></li>
           </ul>
         </div>
         <div>
@@ -231,15 +239,55 @@ def footer(prefix):
   <a class="fab" href="{wa('Olá! Gostaria de conversar com a equipe da Macchio.')}" target="_blank" rel="noopener" data-fab data-track="whatsapp_flutuante">{ic("i-wa")} WhatsApp<span class="vh"> (abre o WhatsApp)</span></a>"""
 
 
-def page(prefix, title, desc, path, og_image, jsonld, body, current="", solid=False, preload=""):
+def write_page(path, prefix, title, desc, og_image, jsonld, body, current="", solid=True, preload=""):
     out = head(prefix, title, desc, path, og_image, jsonld, preload) + header(prefix, current, solid) + body + footer(prefix) + "\n</body>\n</html>\n"
-    return out.replace("{WORD}", WORD)
+    target = ROOT / path / "index.html" if path else ROOT / "index.html"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(out.replace("{WORD}", WORD), encoding="utf-8")
+
+
+def crumbs(prefix, items):
+    """items: lista de (rótulo, href ou None para a página atual)."""
+    parts = [f'<a href="{prefix or "./"}">Início</a>']
+    for label, href in items:
+        parts.append('<span aria-hidden="true">/</span>')
+        parts.append(f'<a href="{href}">{e(label)}</a>' if href else f'<span aria-current="page">{e(label)}</span>')
+    return f'<nav class="crumbs mono" aria-label="Você está em">{"".join(parts)}</nav>'
+
+
+def pagehead(prefix, label, h1, lead, crumb_items):
+    return f"""
+    <section class="pagehead dark" aria-labelledby="page-title">
+      <div class="wrap">
+        {crumbs(prefix, crumb_items)}
+        <span class="label">{label}</span>
+        <h1 class="h1" id="page-title">{h1}</h1>
+        <p class="pagehead-lead">{lead}</p>
+      </div>
+    </section>"""
+
+
+def cta_band(prefix, title="O que você precisa resolver?", text="Fale com a nossa equipe sobre projeto, obra, financiamento ou compra e venda de imóvel."):
+    bg = img_tag("residencia-n-e-a", "06", prefix, "", "100vw")
+    return f"""
+    <section class="cta dark" aria-labelledby="band-title">
+      <div class="cta-bg" aria-hidden="true">{bg}</div>
+      <div class="wrap cta-in">
+        <span class="label">Orçamento</span>
+        <h2 class="h1" id="band-title">{title}</h2>
+        <p class="cta-lead">{text}</p>
+        <div class="band-actions">
+          {pill("Pedir orçamento", f"{prefix}contato/", "pill--light", "band_orcamento")}
+          {wa_link("Conversar no WhatsApp", MSG["outro"], "whatsapp_band")}
+        </div>
+      </div>
+    </section>"""
 
 
 # ---------- componentes ----------
 def project_card(p, prefix, sizes, heading="h3", eager=False):
     return f"""        <li class="card" data-cat="{p["cat"]}">
-          <a class="card-link" href="{prefix}projetos/{p["slug"]}/" data-cursor="Ver projeto">
+          <a class="card-link" href="{prefix}{purl(p)}" data-cursor="Ver projeto">
             <div class="card-media">{cover_tag(p, prefix, sizes, eager=eager)}<span class="badge mono">Perspectiva 3D</span></div>
             <div class="card-body">
               <{heading} class="card-title">{e(p["title"])}</{heading}>
@@ -251,7 +299,9 @@ def project_card(p, prefix, sizes, heading="h3", eager=False):
         </li>"""
 
 
-# ---------- dados compartilhados ----------
+CARD_SIZES = "(min-width: 1024px) 31vw, (min-width: 640px) 46vw, 100vw"
+
+# ---------- conteúdo compartilhado ----------
 ORG_ID = SITE + "#empresa"
 INTERESTS = [
     ("projetos", "Projetos de engenharia e interiores", "Olá! Gostaria de entender melhor os serviços de projetos de engenharia e interiores e solicitar um orçamento."),
@@ -304,7 +354,7 @@ TESTIMONIALS = [
 FAQ = [
     ("A Macchio é imobiliária ou construtora?",
      f"As duas. Somos imobiliária ({CRECI}) e empresa de engenharia ({CREA}): elaboramos projetos, executamos ou gerenciamos obras, orientamos o financiamento e intermediamos a compra e venda de imóveis. Você pode contratar um serviço isolado ou o processo completo."),
-    ("As imagens dos projetos são fotos de obras prontas?",
+    ("As imagens do portfólio são fotos de obras prontas?",
      "Não. As imagens do portfólio são perspectivas 3D (renderizações) dos projetos desenvolvidos pela Macchio. Quando a execução também é prevista pela Macchio, isso está indicado na página do projeto."),
     ("Vocês ajudam a conseguir o financiamento imobiliário?",
      "Orientamos e acompanhamos o processo de financiamento junto às instituições financeiras, para que ele seja mais ágil e menos burocrático. A aprovação do crédito e as condições são definidas pela instituição financeira."),
@@ -336,6 +386,7 @@ ORG = {
     "knowsAbout": ["Projetos de engenharia civil", "Design de interiores", "Regularização de obras", "Execução de obras",
                    "Gerenciamento de obras", "Financiamento imobiliário", "Compra e venda de imóveis"],
 }
+ORG_REF = {"@id": ORG_ID}
 
 
 def breadcrumb(items):
@@ -343,70 +394,59 @@ def breadcrumb(items):
         {"@type": "ListItem", "position": i, "name": n, "item": SITE + u} for i, (n, u) in enumerate(items, 1)]}
 
 
-# ---------- home ----------
-HERO = ("residencia-a-e-d", "01")
-FEATURED = ["residencia-f-e-m", "residencia-p-e-r", "residencia-l-e-g", "residencia-l-e-d", "multifamiliar-03", "interiores-j-e-j"]
+def graph(*nodes):
+    return {"@context": "https://schema.org", "@graph": list(nodes)}
 
 
-def build_home():
-    hp = BY_SLUG[HERO[0]]
-    _, hero_srcset, _ = img_src(*HERO, "")
-    hero_img = img_tag(*HERO, "", f"Perspectiva 3D do projeto {hp['name']}: {hp['cover_alt'][0].lower()}{hp['cover_alt'][1:]}", "100vw", eager=True)
-    preload = f'  <link rel="preload" as="image" imagesrcset="{hero_srcset}" imagesizes="100vw" fetchpriority="high">\n'
-
-    intents = "".join(f'<li><a href="#servico-{k}">{t}</a></li>' for k, t in
-                      [("projetos", "Projetos e interiores"), ("obras", "Obras"), ("financiamento", "Financiamento"), ("imoveis", "Compra e venda")])
-    cards = "\n".join(project_card(BY_SLUG[s], "", "(min-width: 1024px) 31vw, (min-width: 640px) 46vw, 100vw") for s in FEATURED)
-
-    svc = []
-    for k, title, text, items, cta, note in SERVICES:
-        lis = "".join(f"<li>{ic('i-check')}<span>{x}</span></li>" for x in items)
-        note_html = f'<p class="svc-note">{note}</p>' if note else ""
-        svc.append(f"""          <article class="svc-card" id="servico-{k}" aria-labelledby="svc-{k}">
-            <h3 class="svc-title" id="svc-{k}">{title}</h3>
-            <p class="svc-desc">{text}</p>
-            <h4 class="label">O que inclui</h4>
-            <ul class="svc-list">{lis}</ul>
-            {note_html}
-            <div class="svc-cta">{wa_link(cta, MSG[k], f"whatsapp_servico_{k}", "btn-line")}</div>
-          </article>""")
-
-    steps = "\n".join(f'          <li class="step"><span class="step-n mono">{two(i)}</span><h3>{t}</h3><p>{d}</p><span class="step-tag mono">{tag}</span></li>'
-                      for i, (t, d, tag) in enumerate(STEPS, 1))
-
-    tst = []
+def testimonials_html(prefix):
+    out = []
     for name, tag, photo, quote_, full in TESTIMONIALS:
-        avatar = (f'<img src="assets/img/depoimentos/{photo}.webp" width="48" height="48" loading="lazy" decoding="async" alt="">' if photo
+        avatar = (f'<img src="{prefix}assets/img/depoimentos/{photo}.webp" width="48" height="48" loading="lazy" decoding="async" alt="">' if photo
                   else f'<span class="ini" aria-hidden="true">{"".join(w[0] for w in name.split()[:2])}</span>')
         more = ""
         if full:
             more = '<details class="tst-more"><summary>Ler depoimento completo</summary><div>' + "".join(f"<p>{x}</p>" for x in full) + "</div></details>"
-        tst.append(f"""          <figure class="tst">
+        out.append(f"""          <figure class="tst">
             <span class="tst-tag mono">{tag}</span>
             <blockquote><p>“{quote_}”</p></blockquote>
             {more}
             <figcaption>{avatar}<strong>{name}</strong></figcaption>
           </figure>""")
+    return "\n".join(out)
 
-    faq = "\n".join(f"""          <details class="faq-item"{" open" if i == 0 else ""}>
-            <summary>{q}<span class="plus" aria-hidden="true"></span></summary>
-            <div class="faq-a"><p>{a}</p></div>
-          </details>""" for i, (q, a) in enumerate(FAQ))
 
-    options = "".join(f'<option value="{k}" data-msg="{e(m)}">{t}</option>' for k, t, m in INTERESTS)
-    about_img = img_tag("residencia-l-e-d", "06", "", "Perspectiva 3D da área gourmet integrada à cozinha, projeto Residência L e D", "(min-width: 1024px) 40vw, 100vw")
-    cta_img = img_tag("residencia-n-e-a", "06", "", "", "100vw")
+# ---------- / ----------
+HERO = ("residencia-a-e-d", "01")
+FEATURED = ["residencia-f-e-m", "residencia-p-e-r", "residencia-l-e-g", "residencia-l-e-d", "multifamiliar-03", "interiores-j-e-j"]
 
+
+def build_home():
+    pre = ""
+    hp = BY_SLUG[HERO[0]]
+    _, hero_srcset, _ = img_src(*HERO, pre)
+    hero_img = img_tag(*HERO, pre, cover_alt(hp), "100vw", eager=True)
+    preload = f'  <link rel="preload" as="image" imagesrcset="{hero_srcset}" imagesizes="100vw" fetchpriority="high">\n'
+    intents = "".join(f'<li><a href="servicos/#servico-{k}">{t}</a></li>' for k, t in
+                      [("projetos", "Projetos e interiores"), ("obras", "Obras"), ("financiamento", "Financiamento"), ("imoveis", "Compra e venda")])
+    cards = "\n".join(project_card(BY_SLUG[s], pre, CARD_SIZES) for s in FEATURED)
+    svc = "\n".join(f"""          <li class="svc-mini">
+            <a href="servicos/#servico-{k}">
+              <span class="mono">{two(i)}</span>
+              <h3>{title}</h3>
+              <p>{text}</p>
+              <span class="svc-mini-more">Ver o que inclui {ic("i-arrow")}</span>
+            </a>
+          </li>""" for i, (k, title, text, *_rest) in enumerate(SERVICES, 1))
     body = f"""
   <main id="conteudo">
     <section class="hero" data-hero aria-labelledby="hero-title">
-      <figure class="hero-media">{hero_img}<figcaption class="mono"><a href="projetos/{hp["slug"]}/">{e(hp["name"])} · perspectiva 3D</a></figcaption></figure>
+      <figure class="hero-media">{hero_img}<figcaption class="mono"><a href="{purl(hp)}">{e(hp["name"])} · perspectiva 3D</a></figcaption></figure>
       <div class="wrap hero-content">
         <h1 class="hero-title" id="hero-title"><span class="label">Engenharia e imobiliária · Rio do Sul/SC</span><span class="hero-h">Do terreno à chave,</span> <span class="hero-h hero-h--soft">com uma equipe em cada etapa.</span></h1>
         <p class="hero-sub">Projetos de engenharia e interiores, execução e gerenciamento de obras, financiamento e compra e venda de imóveis. Conte com a Macchio para o processo completo ou para a etapa em que você precisa de apoio.</p>
         <div class="hero-ctas">
-          {pill("Planejar minha construção", "#servicos", "pill--light", "hero_planejar")}
-          <a class="link-u" href="#projetos" data-track="hero_projetos">Explorar projetos {ic("i-arrow")}</a>
+          {pill("Planejar minha construção", "servicos/", "pill--light", "hero_planejar")}
+          <a class="link-u" href="portfolio/" data-track="hero_portfolio">Explorar projetos {ic("i-arrow")}</a>
         </div>
         <nav class="hero-intents" aria-label="Encontre o serviço">
           <span class="mono">Encontre o serviço</span>
@@ -415,8 +455,11 @@ def build_home():
       </div>
     </section>
 
-    <section class="wrap intro" aria-label="Sobre a Macchio em resumo">
+    <section class="wrap intro" aria-labelledby="intro-title">
+      <span class="label">Nós somos a Macchio</span>
+      <h2 class="vh" id="intro-title">Nós somos a Macchio</h2>
       <p class="intro-text">Não somos só imobiliária nem só construtora. A Macchio reúne <strong>engenharia e negócios imobiliários</strong> para acompanhar o processo completo ou apenas a etapa em que você precisa de apoio.</p>
+      <a class="link-u intro-link" href="sobre/">Saiba sobre nós {ic("i-arrow")}</a>
       <dl class="facts">
         <div><dt class="label">Engenharia</dt><dd>{CREA}</dd></div>
         <div><dt class="label">Imobiliária</dt><dd>{CRECI}</dd></div>
@@ -425,10 +468,10 @@ def build_home():
       </dl>
     </section>
 
-    <section class="sec dark" id="projetos" aria-labelledby="work-title">
+    <section class="sec dark" aria-labelledby="work-title">
       <div class="wrap">
         <div class="sec-head">
-          <span class="label">Projetos</span>
+          <span class="label">Portfólio</span>
           <h2 class="h2" id="work-title">Projetos desenvolvidos</h2>
           <div class="sec-aside">
             <p class="muted">Residências, sobrados geminados, interiores e ampliações projetados pela Macchio. As imagens são perspectivas 3D (renderizações) dos projetos, não fotos de obras concluídas.</p>
@@ -437,16 +480,125 @@ def build_home():
         <ul class="cards">
 {cards}
         </ul>
-        <div class="sec-foot">{pill(f"Ver todos os {len(PROJECTS)} projetos", "projetos/", "pill--light", "home_ver_todos")}</div>
+        <div class="sec-foot">{pill(f"Ver o portfólio completo ({len(PROJECTS)} projetos)", "portfolio/", "pill--light", "home_portfolio")}</div>
       </div>
     </section>
 
-    <section class="wrap sec" id="servicos" aria-labelledby="svc-title">
+    <section class="wrap sec" aria-labelledby="svc-title">
       <div class="sec-head">
         <span class="label">Serviços</span>
         <h2 class="h2" id="svc-title">O que a Macchio faz por você</h2>
-        <div class="sec-aside"><p class="muted">Quatro frentes de atuação. Você pode contratar só a que precisa ou combinar várias com a mesma equipe.</p></div>
+        <div class="sec-aside"><p class="muted">Quatro frentes de atuação. Contrate só a que você precisa ou combine várias com a mesma equipe.</p></div>
       </div>
+      <ul class="svc-minis">
+{svc}
+      </ul>
+      <div class="sec-foot sec-foot--start">{pill("Ver todos os serviços", "servicos/", "", "home_servicos")}</div>
+    </section>
+
+    <section class="wrap sec sec--tight" aria-labelledby="tst-title">
+      <div class="sec-head">
+        <span class="label">Depoimentos</span>
+        <h2 class="h2" id="tst-title">Quem já trabalhou com a Macchio</h2>
+      </div>
+      <div class="tst-grid">
+{testimonials_html(pre)}
+      </div>
+    </section>
+{cta_band(pre)}
+  </main>"""
+    jsonld = graph(
+        {**ORG, "hasOfferCatalog": {"@type": "OfferCatalog", "name": "Serviços Macchio", "itemListElement": [
+            {"@type": "Offer", "itemOffered": {"@type": "Service", "name": s[1], "description": s[2], "url": f"{SITE}servicos/#servico-{s[0]}"}} for s in SERVICES]}},
+        {"@type": "WebSite", "@id": SITE + "#site", "url": SITE, "name": "Macchio Engenharia e Negócios Imobiliários", "inLanguage": "pt-BR", "publisher": ORG_REF},
+    )
+    write_page("", pre, "Macchio Engenharia | Projetos, obras e imóveis em Rio do Sul/SC",
+               "Engenharia e imobiliária em Rio do Sul/SC: projetos de engenharia e interiores, execução e gerenciamento de obras, financiamento e compra e venda de imóveis.",
+               "assets/img/og-macchio.jpg", jsonld, body, current="inicio", solid=False, preload=preload)
+
+
+# ---------- /sobre/ ----------
+def build_sobre():
+    pre = "../"
+    about_img = img_tag("residencia-l-e-d", "06", pre, "Perspectiva 3D da área gourmet integrada à cozinha, projeto Residência L e D", "(min-width: 1024px) 40vw, 100vw")
+    body = f"""
+  <main id="conteudo">{pagehead(pre, "Sobre a empresa", "Nós somos a Macchio", "Nascemos da vontade de fazer diferente e tornar leve e compreensível um processo conhecido pela dificuldade e pela burocracia.", [("Sobre a empresa", None)])}
+
+    <section class="wrap sec" aria-labelledby="story-title">
+      <div class="about-grid about-grid--light">
+        <figure class="about-media">{about_img}<figcaption class="mono">Residência L e D · perspectiva 3D</figcaption></figure>
+        <div class="about-copy">
+          <span class="label">Nossa história</span>
+          <h2 class="h2" id="story-title">Engenheiro e corretor na mesma mesa.</h2>
+          <p class="lead">Fundada por Djonas Roberto Matias, corretor de imóveis e engenheiro civil formado em 2017, com experiência em venda de imóveis, projetos, gerenciamento e execução de obras e financiamentos imobiliários.</p>
+          <p>Atendemos as quatro frentes (venda de imóveis, financiamento, projetos e execução de obras) porque acreditamos na facilidade e no diferencial de iniciar e finalizar o processo com a mesma equipe, gerando ainda mais confiança e credibilidade.</p>
+          <p>Prezamos por inovação no processo, qualidade nos materiais e na mão de obra, e acreditamos que somente conhecendo a fundo a necessidade de cada cliente conseguimos atender o que ele espera.</p>
+          <p>{pill("Conheça os serviços", "../servicos/", "", "sobre_servicos")}</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="sec proc" aria-labelledby="mvv-title">
+      <div class="wrap">
+        <div class="sec-head"><span class="label">Missão, visão e valores</span><h2 class="h2" id="mvv-title">No que acreditamos</h2></div>
+        <ul class="mvv">
+          <li><span class="mono">Missão</span><p>Auxiliar nossos clientes e simplificar todos os processos da construção do seu sonho. Comprando com prudência, projetando com conhecimento e construindo com segurança.</p></li>
+          <li><span class="mono">Visão</span><p>Ser referência de qualidade no mercado em todos os serviços prestados, prezando pelo ótimo relacionamento com nossos clientes, criando um legado de respeito e compromisso.</p></li>
+          <li><span class="mono">Valores</span><p>Inovação no processo, ética, respeito e comprometimento.</p></li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="wrap sec" aria-labelledby="data-title">
+      <div class="faq-grid">
+        <div class="faq-head"><span class="label">Dados da empresa</span><h2 class="h2" id="data-title">Registros e endereço</h2></div>
+        <dl class="datalist">
+          <div><dt class="mono">Razão social</dt><dd>Macchio Engenharia e Negócios Imobiliários Ltda</dd></div>
+          <div><dt class="mono">CNPJ</dt><dd>{CNPJ}</dd></div>
+          <div><dt class="mono">Registro de engenharia</dt><dd>{CREA}</dd></div>
+          <div><dt class="mono">Registro imobiliário</dt><dd>{CRECI}</dd></div>
+          <div><dt class="mono">Fundador</dt><dd>Djonas Roberto Matias, engenheiro civil e corretor de imóveis</dd></div>
+          <div><dt class="mono">Escritório</dt><dd><a class="inline-link" href="{MAPS}" target="_blank" rel="noopener">{ADDRESS}, {CEP}</a></dd></div>
+        </dl>
+      </div>
+    </section>
+{cta_band(pre)}
+  </main>"""
+    jsonld = graph(
+        {"@type": "AboutPage", "@id": SITE + "sobre/", "url": SITE + "sobre/", "name": "Sobre a Macchio", "about": ORG_REF, "isPartOf": {"@id": SITE + "#site"}},
+        ORG,
+        breadcrumb([("Início", ""), ("Sobre a empresa", "sobre/")]),
+    )
+    write_page("sobre/", pre, "Sobre a Macchio | Engenharia e imobiliária em Rio do Sul/SC",
+               "Conheça a Macchio Engenharia e Negócios Imobiliários: fundada pelo engenheiro civil e corretor Djonas Roberto Matias, atua em projetos, obras, financiamento e imóveis em Rio do Sul/SC.",
+               "assets/img/og-macchio.jpg", jsonld, body, current="sobre")
+
+
+# ---------- /servicos/ ----------
+def build_servicos():
+    pre = "../"
+    svc = []
+    for k, title, text, items, cta, note in SERVICES:
+        lis = "".join(f"<li>{ic('i-check')}<span>{x}</span></li>" for x in items)
+        note_html = f'<p class="svc-note">{note}</p>' if note else ""
+        svc.append(f"""          <article class="svc-card" id="servico-{k}" aria-labelledby="svc-{k}">
+            <h2 class="svc-title" id="svc-{k}">{title}</h2>
+            <p class="svc-desc">{text}</p>
+            <h3 class="label">O que inclui</h3>
+            <ul class="svc-list">{lis}</ul>
+            {note_html}
+            <div class="svc-cta">{wa_link(cta, MSG[k], f"whatsapp_servico_{k}", "btn-line")}<a class="svc-form" href="../contato/?interesse={k}">ou envie pelo formulário</a></div>
+          </article>""")
+    steps = "\n".join(f'          <li class="step"><span class="step-n mono">{two(i)}</span><h3>{t}</h3><p>{d}</p><span class="step-tag mono">{tag}</span></li>'
+                      for i, (t, d, tag) in enumerate(STEPS, 1))
+    faq = "\n".join(f"""          <details class="faq-item"{" open" if i == 0 else ""}>
+            <summary>{q}<span class="plus" aria-hidden="true"></span></summary>
+            <div class="faq-a"><p>{a}</p></div>
+          </details>""" for i, (q, a) in enumerate(FAQ))
+    body = f"""
+  <main id="conteudo">{pagehead(pre, "Serviços", "Nossos serviços", "Não somos apenas uma imobiliária ou só uma construtora: somos a junção de ambas. Contrate uma frente isolada ou o processo completo, com a mesma equipe.", [("Serviços", None)])}
+
+    <section class="wrap sec" aria-label="Serviços">
       <div class="svc-grid">
 {chr(10).join(svc)}
       </div>
@@ -465,34 +617,6 @@ def build_home():
       </div>
     </section>
 
-    <section class="wrap sec" id="depoimentos" aria-labelledby="tst-title">
-      <div class="sec-head">
-        <span class="label">Depoimentos</span>
-        <h2 class="h2" id="tst-title">Quem já trabalhou com a Macchio</h2>
-      </div>
-      <div class="tst-grid">
-{chr(10).join(tst)}
-      </div>
-    </section>
-
-    <section class="sec dark" id="sobre" aria-labelledby="about-title">
-      <div class="wrap about-grid">
-        <figure class="about-media">{about_img}<figcaption class="mono">Residência L e D · perspectiva 3D</figcaption></figure>
-        <div class="about-copy">
-          <span class="label">Sobre a Macchio</span>
-          <h2 class="h2" id="about-title">Engenheiro e corretor na mesma mesa.</h2>
-          <p class="lead">A Macchio nasceu da vontade de tornar leve e compreensível um processo conhecido pela dificuldade e pela burocracia.</p>
-          <p>Foi fundada por Djonas Roberto Matias, engenheiro civil formado em 2017 e corretor de imóveis, com experiência em venda de imóveis, projetos, gerenciamento e execução de obras e financiamento imobiliário.</p>
-          <dl class="about-facts">
-            <div><dt class="mono">Fundador</dt><dd>Djonas Roberto Matias</dd></div>
-            <div><dt class="mono">Registros</dt><dd>{CREA} · {CRECI}</dd></div>
-            <div><dt class="mono">Valores</dt><dd>Inovação no processo, ética, respeito e comprometimento</dd></div>
-            <div><dt class="mono">Missão</dt><dd>Comprar com prudência, projetar com conhecimento e construir com segurança</dd></div>
-          </dl>
-        </div>
-      </div>
-    </section>
-
     <section class="wrap sec" id="perguntas" aria-labelledby="faq-title">
       <div class="faq-grid">
         <div class="faq-head">
@@ -505,66 +629,39 @@ def build_home():
         </div>
       </div>
     </section>
-
-    <section class="cta dark" id="contato" aria-labelledby="cta-title">
-      <div class="cta-bg" aria-hidden="true">{cta_img}</div>
-      <div class="wrap cta-in">
-        <span class="label">Contato</span>
-        <h2 class="h1" id="cta-title">O que você precisa resolver?</h2>
-        <p class="cta-lead">Escolha a área de interesse e, se quiser, descreva sua necessidade. Ao enviar, o WhatsApp abre com a mensagem pronta: você revisa e envia para a nossa equipe.</p>
-        <div class="cta-grid">
-          <form class="cta-form" data-lead-form novalidate>
-            <div class="field"><label class="mono" for="f-int">Área de interesse</label>
-              <select id="f-int" name="interesse" required><option value="">Selecione</option>{options}</select>
-            </div>
-            <div class="field"><label class="mono" for="f-nome">Seu nome</label><input id="f-nome" name="nome" type="text" autocomplete="name" required></div>
-            <div class="field"><label class="mono" for="f-msg">Sua necessidade (opcional)</label><textarea id="f-msg" name="mensagem" rows="2"></textarea></div>
-            <p class="form-err" data-form-err role="alert"></p>
-            <div><button class="pill pill--light" type="submit">Continuar no WhatsApp<span class="pill-ic" aria-hidden="true">{ic("i-wa")}{ic("i-wa")}</span></button></div>
-            <p class="form-ok" data-form-ok role="status" hidden>Abrimos o WhatsApp com a sua mensagem em uma nova aba. Se ele não abriu, <a data-form-link href="#" target="_blank" rel="noopener">clique aqui</a>.</p>
-          </form>
-          <ul class="cta-info">
-            <li><a href="{wa(MSG["outro"])}" target="_blank" rel="noopener" data-track="whatsapp_contato"><span class="mono">WhatsApp</span><span>{PHONE}</span>{ic("i-wa")}</a></li>
-            <li><a href="{PHONE_HREF}" data-track="telefone_contato"><span class="mono">Telefone</span><span>{PHONE}</span>{ic("i-arrow")}</a></li>
-            <li><a href="mailto:{EMAIL}" data-track="email_contato"><span class="mono">E-mail</span><span>{EMAIL}</span>{ic("i-arrow")}</a></li>
-            <li><a href="{MAPS}" target="_blank" rel="noopener" data-track="mapa_contato"><span class="mono">Escritório · ver no mapa</span><span>{ADDRESS}</span>{ic("i-arrow")}</a></li>
-          </ul>
-        </div>
-      </div>
-    </section>
+{cta_band(pre)}
   </main>"""
-
-    jsonld = {"@context": "https://schema.org", "@graph": [
-        {**ORG, "hasOfferCatalog": {"@type": "OfferCatalog", "name": "Serviços Macchio", "itemListElement": [
-            {"@type": "Offer", "itemOffered": {"@type": "Service", "name": s[1], "description": s[2]}} for s in SERVICES]}},
-        {"@type": "WebSite", "@id": SITE + "#site", "url": SITE, "name": "Macchio Engenharia e Negócios Imobiliários", "inLanguage": "pt-BR", "publisher": {"@id": ORG_ID}},
-        {"@type": "FAQPage", "@id": SITE + "#perguntas", "mainEntity": [
+    jsonld = graph(
+        {"@type": "WebPage", "@id": SITE + "servicos/", "url": SITE + "servicos/", "name": "Serviços | Macchio Engenharia", "isPartOf": {"@id": SITE + "#site"}, "about": ORG_REF},
+        *[{"@type": "Service", "@id": f"{SITE}servicos/#servico-{s[0]}", "name": s[1], "description": s[2], "provider": ORG_REF, "areaServed": {"@type": "City", "name": "Rio do Sul"}} for s in SERVICES],
+        {"@type": "FAQPage", "@id": SITE + "servicos/#perguntas", "mainEntity": [
             {"@type": "Question", "name": q, "acceptedAnswer": {"@type": "Answer", "text": a}} for q, a in FAQ]},
-    ]}
-    out = page("", "Macchio Engenharia | Projetos, obras e imóveis em Rio do Sul/SC",
-               "Engenharia e imobiliária em Rio do Sul/SC: projetos de engenharia e interiores, execução e gerenciamento de obras, financiamento e compra e venda de imóveis.",
-               "", "assets/img/og-macchio.jpg", jsonld, body, preload=preload)
-    (ROOT / "index.html").write_text(out, encoding="utf-8")
+        breadcrumb([("Início", ""), ("Serviços", "servicos/")]),
+    )
+    write_page("servicos/", pre, "Serviços | Projetos, obras, financiamento e imóveis em Rio do Sul/SC | Macchio",
+               "Projetos de engenharia e interiores, execução e gerenciamento de obras, orientação em financiamento imobiliário e compra e venda de imóveis em Rio do Sul/SC.",
+               "assets/img/og-macchio.jpg", jsonld, body, current="servicos")
 
 
-# ---------- índice de projetos ----------
-def build_index():
+# ---------- /portfolio/ ----------
+def build_portfolio():
     pre = "../"
     counts = {c: (len(PROJECTS) if c == "all" else sum(p["cat"] == c for p in PROJECTS)) for c, _ in CATS}
     filters = "".join(f'<button type="button" data-filter="{c}" aria-pressed="{"true" if c == "all" else "false"}">{t}<sup>{counts[c]}</sup></button>' for c, t in CATS)
-    cards = "\n".join(project_card(p, pre, "(min-width: 1024px) 31vw, (min-width: 640px) 46vw, 100vw", heading="h2", eager=(i < 3)) for i, p in enumerate(PROJECTS))
+    cards = "\n".join(project_card(p, pre, CARD_SIZES, heading="h2", eager=(i < 3)) for i, p in enumerate(PROJECTS))
     rows = []
     for i, p in enumerate(PROJECTS):
         src, _, _ = img_src(p["slug"], p["renders"][0]["file"], pre)
         rows.append(f"""        <li class="prow" data-cat="{p["cat"]}" data-preview="{src}">
-          <a href="{p["slug"]}/"><span class="mono">{two(i + 1)}</span><span class="prow-t"><strong>{e(p["title"])}</strong><span class="mono">{e(p["name"])}</span></span><span class="mono c-type">{e(p["type"])}</span><span class="mono c-city">{e(city_uf(p) or "")}</span><span class="mono c-area">{e(p["area"] or "—")}</span></a>
+          <a href="{pre}{purl(p)}"><span class="mono">{two(i + 1)}</span><span class="prow-t"><strong>{e(p["title"])}</strong><span class="mono">{e(p["name"])}</span></span><span class="mono c-type">{e(p["type"])}</span><span class="mono c-city">{e(city_uf(p) or "")}</span><span class="mono c-area">{e(p["area"] or "—")}</span></a>
         </li>""")
     body = f"""
   <main id="conteudo" class="dark pidx" data-pidx>
     <div class="wrap pidx-head">
+      {crumbs(pre, [("Portfólio", None)])}
       <span class="label">Portfólio</span>
-      <h1 class="h1">Projetos<sup>{len(PROJECTS)}</sup></h1>
-      <p>Residências unifamiliares, sobrados geminados, interiores e ampliações projetados pela Macchio em Rio do Sul e Aurora/SC. As imagens são perspectivas 3D (renderizações) dos projetos.</p>
+      <h1 class="h1">Portfólio<sup>{len(PROJECTS)}</sup></h1>
+      <p>A Macchio elabora projetos técnicos residenciais, comerciais e industriais, conforme as normas e os requisitos exigidos. Aqui estão residências, sobrados geminados, interiores e ampliações projetados em Rio do Sul e Aurora/SC. As imagens são perspectivas 3D (renderizações) dos projetos.</p>
     </div>
     <div class="pidx-bar">
       <div class="wrap pidx-bar-in">
@@ -582,20 +679,18 @@ def build_index():
       </ul>
     </div>
   </main>"""
-    jsonld = {"@context": "https://schema.org", "@graph": [
-        {"@type": "CollectionPage", "@id": SITE + "projetos/", "url": SITE + "projetos/", "name": "Projetos | Macchio Engenharia",
-         "isPartOf": {"@id": SITE + "#site"}, "about": {"@id": ORG_ID},
-         "hasPart": [{"@type": "CreativeWork", "name": full_title(p), "alternateName": p["name"], "url": f"{SITE}projetos/{p['slug']}/"} for p in PROJECTS]},
-        breadcrumb([("Início", ""), ("Projetos", "projetos/")]),
-    ]}
-    out = page(pre, "Projetos de casas, sobrados e interiores em Rio do Sul/SC | Macchio Engenharia",
+    jsonld = graph(
+        {"@type": "CollectionPage", "@id": SITE + "portfolio/", "url": SITE + "portfolio/", "name": "Portfólio | Macchio Engenharia",
+         "isPartOf": {"@id": SITE + "#site"}, "about": ORG_REF,
+         "hasPart": [{"@type": "CreativeWork", "name": full_title(p), "alternateName": p["name"], "url": SITE + purl(p)} for p in PROJECTS]},
+        breadcrumb([("Início", ""), ("Portfólio", "portfolio/")]),
+    )
+    write_page("portfolio/", pre, "Portfólio | Projetos de casas, sobrados e interiores em Rio do Sul/SC | Macchio",
                f"Portfólio Macchio: {len(PROJECTS)} projetos de residências, sobrados geminados, interiores e ampliações em Rio do Sul e Aurora/SC, com perspectivas 3D, área e programa de cada projeto.",
-               "projetos/", "assets/img/og-macchio.jpg", jsonld, body, current="projetos", solid=True)
-    (ROOT / "projetos").mkdir(exist_ok=True)
-    (ROOT / "projetos/index.html").write_text(out, encoding="utf-8")
+               "assets/img/og-macchio.jpg", jsonld, body, current="portfolio")
 
 
-# ---------- página de projeto ----------
+# ---------- /portfolio/<slug>/ ----------
 def related(p, n=3):
     same = [x for x in PROJECTS if x["cat"] == p["cat"] and x["slug"] != p["slug"]]
     others = [x for x in PROJECTS if x["cat"] != p["cat"]]
@@ -608,10 +703,8 @@ def build_project(p):
     pre = "../../"
     slug = p["slug"]
     total = len(p["renders"])
-    lb_items = []
     cover = p["renders"][0]
     _, _, cover_full = img_src(slug, cover["file"], pre)
-
     gal = []
     rest = p["renders"][1:]
     for j, r in enumerate(rest, 2):
@@ -622,35 +715,23 @@ def build_project(p):
     for j, r in enumerate(p["plans"], 1):
         src, srcset, full = img_src(slug, r["file"], pre)
         plans.append(f'        <li><button class="gal-item is-plan" type="button" data-lb-item data-full="{full}" aria-label="Ampliar planta humanizada {j}"><img src="{src}" srcset="{srcset}" sizes="(min-width: 900px) 48vw, 100vw" width="{r["w"]}" height="{r["h"]}" loading="lazy" decoding="async" alt="{e(p["name"])}: planta humanizada {j}"></button></li>')
-
-    dl = [("Tipo", p["type"]), ("Cidade", city_uf(p)), ("Área total", p["area"]), ("Escopo da Macchio", p["scope"]),
-          ("Execução", p["exec"]), ("Imagens", f"{total} perspectivas 3D" + (f" e {len(p['plans'])} planta{'s' if len(p['plans']) > 1 else ''} humanizada{'s' if len(p['plans']) > 1 else ''}" if p["plans"] else ""))]
+    n_pl = len(p["plans"])
+    dl = [("Tipo", p["type"]), ("Cidade", city_uf(p)), ("Área total", p["area"]), ("Escopo da Macchio", p["scope"]), ("Execução", p["exec"]),
+          ("Imagens", f"{total} perspectivas 3D" + (f" e {n_pl} planta{'s' if n_pl > 1 else ''} humanizada{'s' if n_pl > 1 else ''}" if n_pl else ""))]
     dl_html = "".join(f'<div><dt class="mono">{k}</dt><dd>{e(v)}</dd></div>' for k, v in dl if v)
     desc = p["desc"]
     paras = "".join(f"<p>{e(x)}</p>" for x in desc)
-    src0, srcset0, _ = img_src(slug, cover["file"], pre)
+    _, srcset0, _ = img_src(slug, cover["file"], pre)
     preload = f'  <link rel="preload" as="image" imagesrcset="{srcset0}" imagesizes="100vw" fetchpriority="high">\n'
     msg = f"Olá! Vi o projeto {p['name']} ({p['title']}) no site da Macchio e gostaria de solicitar um projeto semelhante."
-    rel = "\n".join(project_card(x, pre, "(min-width: 1024px) 31vw, (min-width: 640px) 46vw, 100vw") for x in related(p))
-    plans_html = ""
-    if plans:
-        plans_html = f"""
-      <h2 class="label gal-h">Plantas humanizadas</h2>
-      <ul class="gal gal--plans">
-{chr(10).join(plans)}
-      </ul>"""
-    gal_html = ""
-    if gal:
-        gal_html = f"""
-      <h2 class="label gal-h">Galeria · perspectivas 3D</h2>
-      <ul class="gal">
-{chr(10).join(gal)}
-      </ul>"""
+    rel = "\n".join(project_card(x, pre, CARD_SIZES) for x in related(p))
+    gal_html = (f'\n      <h2 class="label gal-h">Galeria · perspectivas 3D</h2>\n      <ul class="gal">\n{chr(10).join(gal)}\n      </ul>' if gal else "")
+    plans_html = (f'\n      <h2 class="label gal-h">Plantas humanizadas</h2>\n      <ul class="gal gal--plans">\n{chr(10).join(plans)}\n      </ul>' if plans else "")
     body = f"""
   <main id="conteudo">
     <section class="phead dark" aria-labelledby="p-title">
       <div class="wrap">
-        <nav class="crumbs mono" aria-label="Você está em"><a href="{pre}">Início</a><span aria-hidden="true">/</span><a href="../">Projetos</a><span aria-hidden="true">/</span><span aria-current="page">{e(p["name"])}</span></nav>
+        {crumbs(pre, [("Portfólio", "../"), (p["name"], None)])}
         <p class="label">{e(p["name"])} · {e(p["type"])}</p>
         <h1 class="h1" id="p-title">{e(full_title(p))}</h1>
         <dl class="phead-meta">{dl_html}</dl>
@@ -661,7 +742,7 @@ def build_project(p):
       </figure>
     </section>
     <section class="wrap pinfo" aria-labelledby="p-about">
-      <h2 class="label" id="p-about">Sobre o projeto</h2>
+      <h2 class="label" id="p-about">Descrição do projeto</h2>
       <div class="pinfo-text">{paras}</div>
     </section>
     <section class="wrap pgal" aria-label="Imagens do projeto">{gal_html}{plans_html}
@@ -670,12 +751,12 @@ def build_project(p):
       <h2 class="h2" id="pcta-title">Quer um projeto semelhante?</h2>
       <div class="pcta-actions">
         {pill("Solicitar um projeto semelhante", wa(msg), "", "whatsapp_projeto_semelhante", whatsapp=True)}
-        <a class="link-u" href="../">Ver todos os projetos {ic("i-arrow")}</a>
+        <a class="link-u" href="../">Ver todo o portfólio {ic("i-arrow")}</a>
       </div>
     </section>
     <section class="sec dark related" aria-labelledby="rel-title">
       <div class="wrap">
-        <div class="sec-head sec-head--row"><h2 class="h2" id="rel-title">Projetos relacionados</h2><a class="link-u" href="../">Ver todos {ic("i-arrow")}</a></div>
+        <div class="sec-head sec-head--row"><h2 class="h2" id="rel-title">Projetos relacionados</h2><a class="link-u" href="../">Ver todo o portfólio {ic("i-arrow")}</a></div>
         <ul class="cards">
 {rel}
         </ul>
@@ -687,21 +768,63 @@ def build_project(p):
     <figure class="lb-fig"><img alt=""></figure>
     <div class="lb-bot"><span class="mono" data-lb-count aria-live="polite"></span><div class="lb-nav"><button class="circ" type="button" data-lb-prev aria-label="Imagem anterior">{ic("i-prev")}</button><button class="circ" type="button" data-lb-next aria-label="Próxima imagem">{ic("i-arrow")}</button></div></div>
   </dialog>"""
-    url = f"projetos/{slug}/"
-    jsonld = {"@context": "https://schema.org", "@graph": [
+    url = purl(p)
+    jsonld = graph(
         {"@type": "CreativeWork", "@id": SITE + url, "url": SITE + url, "name": full_title(p), "alternateName": p["name"], "genre": p["type"],
-         "description": " ".join(desc), "image": [SITE + img_src(slug, cover["file"], "")[2]], "inLanguage": "pt-BR", "creator": {"@id": ORG_ID},
+         "description": " ".join(desc), "image": [SITE + img_src(slug, cover["file"], "")[2]], "inLanguage": "pt-BR", "creator": ORG_REF,
          **({"locationCreated": {"@type": "Place", "address": {"@type": "PostalAddress", "addressLocality": p["city"], "addressRegion": "SC", "addressCountry": "BR"}}} if p["city"] else {})},
-        breadcrumb([("Início", ""), ("Projetos", "projetos/"), (p["name"], url)]),
-    ]}
+        breadcrumb([("Início", ""), ("Portfólio", "portfolio/"), (p["name"], url)]),
+    )
     meta_desc = (f"{full_title(p)}/SC" + (f", {p['area']}" if p["area"] else "") + f". {p['type']} projetada pela Macchio Engenharia ({p['name']}), com {total} perspectivas 3D"
                  + (" e plantas humanizadas" if p["plans"] else "") + ".")
-    title = f"{full_title(p)}/SC · {p['name']} | Macchio Engenharia"
     make_og(slug, cover["file"])
-    out = page(pre, title, meta_desc, url, f"assets/img/projetos/{slug}/og.jpg", jsonld, body, current="projetos", solid=True, preload=preload)
-    d = ROOT / "projetos" / slug
-    d.mkdir(parents=True, exist_ok=True)
-    (d / "index.html").write_text(out, encoding="utf-8")
+    write_page(url, pre, f"{full_title(p)}/SC · {p['name']} | Macchio Engenharia", meta_desc,
+               f"assets/img/projetos/{slug}/og.jpg", jsonld, body, current="portfolio", preload=preload)
+
+
+# ---------- /contato/ ----------
+def build_contato():
+    pre = "../"
+    options = "".join(f'<option value="{k}" data-msg="{e(m)}">{t}</option>' for k, t, m in INTERESTS)
+    bg = img_tag("residencia-n-e-a", "06", pre, "", "100vw")
+    body = f"""
+  <main id="conteudo">
+    <section class="cta dark cta--page" aria-labelledby="page-title">
+      <div class="cta-bg" aria-hidden="true">{bg}</div>
+      <div class="wrap cta-in">
+        {crumbs(pre, [("Contato", None)])}
+        <span class="label">Contato</span>
+        <h1 class="h1" id="page-title">O que você precisa resolver?</h1>
+        <p class="cta-lead">Ficou com dúvida ou quer saber como podemos te ajudar? Escolha a área de interesse e, se quiser, descreva sua necessidade. Ao enviar, o WhatsApp abre com a mensagem pronta: você revisa e envia para a nossa equipe.</p>
+        <div class="cta-grid">
+          <form class="cta-form" data-lead-form novalidate>
+            <div class="field"><label class="mono" for="f-int">Área de interesse</label>
+              <select id="f-int" name="interesse" required><option value="">Selecione</option>{options}</select>
+            </div>
+            <div class="field"><label class="mono" for="f-nome">Seu nome</label><input id="f-nome" name="nome" type="text" autocomplete="name" required></div>
+            <div class="field"><label class="mono" for="f-msg">Sua necessidade (opcional)</label><textarea id="f-msg" name="mensagem" rows="3"></textarea></div>
+            <p class="form-err" data-form-err role="alert"></p>
+            <div><button class="pill pill--light" type="submit">Continuar no WhatsApp<span class="pill-ic" aria-hidden="true">{ic("i-wa")}{ic("i-wa")}</span></button></div>
+            <p class="form-ok" data-form-ok role="status" hidden>Abrimos o WhatsApp com a sua mensagem em uma nova aba. Se ele não abriu, <a data-form-link href="#" target="_blank" rel="noopener">clique aqui</a>.</p>
+          </form>
+          <ul class="cta-info">
+            <li><a href="{wa(MSG["outro"])}" target="_blank" rel="noopener" data-track="whatsapp_contato"><span class="mono">WhatsApp</span><span>{PHONE}</span>{ic("i-wa")}</a></li>
+            <li><a href="{PHONE_HREF}" data-track="telefone_contato"><span class="mono">Telefone</span><span>{PHONE}</span>{ic("i-arrow")}</a></li>
+            <li><a href="mailto:{EMAIL}" data-track="email_contato"><span class="mono">E-mail</span><span>{EMAIL}</span>{ic("i-arrow")}</a></li>
+            <li><a href="{MAPS}" target="_blank" rel="noopener" data-track="mapa_contato"><span class="mono">Escritório · ver no mapa</span><span>{ADDRESS}, {CEP}</span>{ic("i-arrow")}</a></li>
+          </ul>
+        </div>
+      </div>
+    </section>
+  </main>"""
+    jsonld = graph(
+        {"@type": "ContactPage", "@id": SITE + "contato/", "url": SITE + "contato/", "name": "Contato | Macchio Engenharia", "isPartOf": {"@id": SITE + "#site"}, "about": ORG_REF},
+        ORG,
+        breadcrumb([("Início", ""), ("Contato", "contato/")]),
+    )
+    write_page("contato/", pre, "Contato e orçamento | Macchio Engenharia em Rio do Sul/SC",
+               f"Fale com a Macchio sobre projeto, obra, financiamento ou compra e venda de imóvel. WhatsApp {PHONE}, {EMAIL}. Escritório no Centro de Rio do Sul/SC.",
+               "assets/img/og-macchio.jpg", jsonld, body, current="contato")
 
 
 def make_og(slug, file):
@@ -715,16 +838,22 @@ def make_og(slug, file):
 
 
 def build_sitemap():
-    urls = [SITE, SITE + "projetos/"] + [f"{SITE}projetos/{p['slug']}/" for p in PROJECTS]
+    urls = [SITE] + [SITE + u for u in ("sobre/", "servicos/", "portfolio/")] + [SITE + purl(p) for p in PROJECTS] + [SITE + "contato/"]
     xml = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
     xml += "".join(f"  <url><loc>{u}</loc></url>\n" for u in urls) + "</urlset>\n"
     (ROOT / "sitemap.xml").write_text(xml, encoding="utf-8")
 
 
 if __name__ == "__main__":
+    # páginas de uma estrutura anterior (/projetos/) não fazem parte do site atual
+    if (ROOT / "projetos").exists():
+        shutil.rmtree(ROOT / "projetos")
     build_home()
-    build_index()
+    build_sobre()
+    build_servicos()
+    build_portfolio()
     for p in PROJECTS:
         build_project(p)
+    build_contato()
     build_sitemap()
-    print(f"ok: home, índice e {len(PROJECTS)} projetos")
+    print(f"ok: 5 páginas + {len(PROJECTS)} projetos em /portfolio/")

@@ -3,218 +3,218 @@
   "trailingSlash": true,
   "redirects": [
     {
-      "source": "/sobre",
-      "destination": "/#sobre",
+      "source": "/projetos",
+      "destination": "/portfolio/",
       "permanent": true
     },
     {
-      "source": "/sobre/",
-      "destination": "/#sobre",
+      "source": "/projetos/",
+      "destination": "/portfolio/",
       "permanent": true
     },
     {
-      "source": "/servicos",
-      "destination": "/#servicos",
+      "source": "/projetos/residencia-a-e-d",
+      "destination": "/portfolio/residencia-unifamiliar-a-e-d/",
       "permanent": true
     },
     {
-      "source": "/servicos/",
-      "destination": "/#servicos",
+      "source": "/projetos/residencia-a-e-d/",
+      "destination": "/portfolio/residencia-unifamiliar-a-e-d/",
       "permanent": true
     },
     {
-      "source": "/contato",
-      "destination": "/#contato",
+      "source": "/projetos/residencia-f-e-m",
+      "destination": "/portfolio/residencia-unifamiliar-f-e-m/",
       "permanent": true
     },
     {
-      "source": "/contato/",
-      "destination": "/#contato",
+      "source": "/projetos/residencia-f-e-m/",
+      "destination": "/portfolio/residencia-unifamiliar-f-e-m/",
       "permanent": true
     },
     {
-      "source": "/portfolio",
-      "destination": "/projetos/",
+      "source": "/projetos/residencia-p-e-r",
+      "destination": "/portfolio/residencia-unifamiliar-p-e-r/",
       "permanent": true
     },
     {
-      "source": "/portfolio/",
-      "destination": "/projetos/",
+      "source": "/projetos/residencia-p-e-r/",
+      "destination": "/portfolio/residencia-unifamiliar-p-e-r/",
       "permanent": true
     },
     {
-      "source": "/portfolio/residencia-unifamiliar-a-e-d",
-      "destination": "/projetos/residencia-a-e-d/",
+      "source": "/projetos/residencia-l-e-g",
+      "destination": "/portfolio/residencia-unifamiliar-l-e-g/",
       "permanent": true
     },
     {
-      "source": "/portfolio/residencia-unifamiliar-a-e-d/",
-      "destination": "/projetos/residencia-a-e-d/",
+      "source": "/projetos/residencia-l-e-g/",
+      "destination": "/portfolio/residencia-unifamiliar-l-e-g/",
       "permanent": true
     },
     {
-      "source": "/portfolio/residencia-unifamiliar-f-e-m",
-      "destination": "/projetos/residencia-f-e-m/",
+      "source": "/projetos/residencia-l-e-d",
+      "destination": "/portfolio/residencia-unifamiliar-l-e-d/",
       "permanent": true
     },
     {
-      "source": "/portfolio/residencia-unifamiliar-f-e-m/",
-      "destination": "/projetos/residencia-f-e-m/",
+      "source": "/projetos/residencia-l-e-d/",
+      "destination": "/portfolio/residencia-unifamiliar-l-e-d/",
       "permanent": true
     },
     {
-      "source": "/portfolio/residencia-unifamiliar-p-e-r",
-      "destination": "/projetos/residencia-p-e-r/",
+      "source": "/projetos/multifamiliar-03",
+      "destination": "/portfolio/residencia-multifamiliar-03/",
       "permanent": true
     },
     {
-      "source": "/portfolio/residencia-unifamiliar-p-e-r/",
-      "destination": "/projetos/residencia-p-e-r/",
+      "source": "/projetos/multifamiliar-03/",
+      "destination": "/portfolio/residencia-multifamiliar-03/",
       "permanent": true
     },
     {
-      "source": "/portfolio/residencia-unifamiliar-l-e-g",
-      "destination": "/projetos/residencia-l-e-g/",
+      "source": "/projetos/interiores-j-e-j",
+      "destination": "/portfolio/interiores-j-e-j/",
       "permanent": true
     },
     {
-      "source": "/portfolio/residencia-unifamiliar-l-e-g/",
-      "destination": "/projetos/residencia-l-e-g/",
+      "source": "/projetos/interiores-j-e-j/",
+      "destination": "/portfolio/interiores-j-e-j/",
       "permanent": true
     },
     {
-      "source": "/portfolio/residencia-unifamiliar-l-e-d",
-      "destination": "/projetos/residencia-l-e-d/",
+      "source": "/projetos/residencia-n-e-a",
+      "destination": "/portfolio/https-macchioengenharia-com-br-portfolio-residencia-unifamiliar-n-e-a/",
       "permanent": true
     },
     {
-      "source": "/portfolio/residencia-unifamiliar-l-e-d/",
-      "destination": "/projetos/residencia-l-e-d/",
+      "source": "/projetos/residencia-n-e-a/",
+      "destination": "/portfolio/https-macchioengenharia-com-br-portfolio-residencia-unifamiliar-n-e-a/",
       "permanent": true
     },
     {
-      "source": "/portfolio/residencia-multifamiliar-03",
-      "destination": "/projetos/multifamiliar-03/",
+      "source": "/projetos/multifamiliar-01",
+      "destination": "/portfolio/residencia-multifamiliar-01/",
       "permanent": true
     },
     {
-      "source": "/portfolio/residencia-multifamiliar-03/",
-      "destination": "/projetos/multifamiliar-03/",
+      "source": "/projetos/multifamiliar-01/",
+      "destination": "/portfolio/residencia-multifamiliar-01/",
       "permanent": true
     },
     {
-      "source": "/portfolio/interiores-j-e-j",
-      "destination": "/projetos/interiores-j-e-j/",
+      "source": "/projetos/residencia-s-e-g",
+      "destination": "/portfolio/residencia-unifamiliar-s-e-g/",
       "permanent": true
     },
     {
-      "source": "/portfolio/interiores-j-e-j/",
-      "destination": "/projetos/interiores-j-e-j/",
+      "source": "/projetos/residencia-s-e-g/",
+      "destination": "/portfolio/residencia-unifamiliar-s-e-g/",
       "permanent": true
     },
     {
-      "source": "/portfolio/https-macchioengenharia-com-br-portfolio-residencia-unifamiliar-n-e-a",
-      "destination": "/projetos/residencia-n-e-a/",
+      "source": "/projetos/residencia-i-e-o",
+      "destination": "/portfolio/residencia-unifamiliar-i-e-o/",
       "permanent": true
     },
     {
-      "source": "/portfolio/https-macchioengenharia-com-br-portfolio-residencia-unifamiliar-n-e-a/",
-      "destination": "/projetos/residencia-n-e-a/",
+      "source": "/projetos/residencia-i-e-o/",
+      "destination": "/portfolio/residencia-unifamiliar-i-e-o/",
       "permanent": true
     },
     {
-      "source": "/portfolio/residencia-multifamiliar-01",
-      "destination": "/projetos/multifamiliar-01/",
+      "source": "/projetos/interiores-j-e-d",
+      "destination": "/portfolio/interiores-j-e-d/",
       "permanent": true
     },
     {
-      "source": "/portfolio/residencia-multifamiliar-01/",
-      "destination": "/projetos/multifamiliar-01/",
+      "source": "/projetos/interiores-j-e-d/",
+      "destination": "/portfolio/interiores-j-e-d/",
       "permanent": true
     },
     {
-      "source": "/portfolio/residencia-unifamiliar-s-e-g",
-      "destination": "/projetos/residencia-s-e-g/",
+      "source": "/projetos/residencia-m-e-l",
+      "destination": "/portfolio/residencia-unifamiliar-m-e-l/",
       "permanent": true
     },
     {
-      "source": "/portfolio/residencia-unifamiliar-s-e-g/",
-      "destination": "/projetos/residencia-s-e-g/",
+      "source": "/projetos/residencia-m-e-l/",
+      "destination": "/portfolio/residencia-unifamiliar-m-e-l/",
       "permanent": true
     },
     {
-      "source": "/portfolio/residencia-unifamiliar-i-e-o",
-      "destination": "/projetos/residencia-i-e-o/",
+      "source": "/projetos/residencia-a-e-l",
+      "destination": "/portfolio/residencia-unifamiliar-a-e-l/",
       "permanent": true
     },
     {
-      "source": "/portfolio/residencia-unifamiliar-i-e-o/",
-      "destination": "/projetos/residencia-i-e-o/",
+      "source": "/projetos/residencia-a-e-l/",
+      "destination": "/portfolio/residencia-unifamiliar-a-e-l/",
       "permanent": true
     },
     {
-      "source": "/portfolio/interiores-j-e-d",
-      "destination": "/projetos/interiores-j-e-d/",
+      "source": "/projetos/multifamiliar-02",
+      "destination": "/portfolio/residencia-multifamiliar-02/",
       "permanent": true
     },
     {
-      "source": "/portfolio/interiores-j-e-d/",
-      "destination": "/projetos/interiores-j-e-d/",
+      "source": "/projetos/multifamiliar-02/",
+      "destination": "/portfolio/residencia-multifamiliar-02/",
       "permanent": true
     },
     {
-      "source": "/portfolio/residencia-unifamiliar-m-e-l",
-      "destination": "/projetos/residencia-m-e-l/",
+      "source": "/projetos/multifamiliar-04",
+      "destination": "/portfolio/residencia-multifamiliar-04/",
       "permanent": true
     },
     {
-      "source": "/portfolio/residencia-unifamiliar-m-e-l/",
-      "destination": "/projetos/residencia-m-e-l/",
+      "source": "/projetos/multifamiliar-04/",
+      "destination": "/portfolio/residencia-multifamiliar-04/",
       "permanent": true
     },
     {
-      "source": "/portfolio/residencia-unifamiliar-a-e-l",
-      "destination": "/projetos/residencia-a-e-l/",
+      "source": "/projetos/residencia-n-e-c",
+      "destination": "/portfolio/interiores-n-e-c/",
       "permanent": true
     },
     {
-      "source": "/portfolio/residencia-unifamiliar-a-e-l/",
-      "destination": "/projetos/residencia-a-e-l/",
+      "source": "/projetos/residencia-n-e-c/",
+      "destination": "/portfolio/interiores-n-e-c/",
       "permanent": true
     },
     {
-      "source": "/portfolio/residencia-multifamiliar-02",
-      "destination": "/projetos/multifamiliar-02/",
+      "source": "/wp-sitemap.xml",
+      "destination": "/sitemap.xml",
       "permanent": true
     },
     {
-      "source": "/portfolio/residencia-multifamiliar-02/",
-      "destination": "/projetos/multifamiliar-02/",
+      "source": "/feed",
+      "destination": "/",
       "permanent": true
     },
     {
-      "source": "/portfolio/residencia-multifamiliar-04",
-      "destination": "/projetos/multifamiliar-04/",
+      "source": "/feed/",
+      "destination": "/",
       "permanent": true
     },
     {
-      "source": "/portfolio/residencia-multifamiliar-04/",
-      "destination": "/projetos/multifamiliar-04/",
+      "source": "/comments/feed",
+      "destination": "/",
       "permanent": true
     },
     {
-      "source": "/portfolio/interiores-n-e-c",
-      "destination": "/projetos/residencia-n-e-c/",
+      "source": "/comments/feed/",
+      "destination": "/",
       "permanent": true
     },
     {
-      "source": "/portfolio/interiores-n-e-c/",
-      "destination": "/projetos/residencia-n-e-c/",
+      "source": "/author/:name*",
+      "destination": "/",
       "permanent": true
     },
     {
-      "source": "/portfolio/:slug*",
-      "destination": "/projetos/",
+      "source": "/elementor-hf/:name*",
+      "destination": "/",
       "permanent": true
     }
   ],

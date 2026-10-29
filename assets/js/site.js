@@ -137,6 +137,8 @@
     const err = $("[data-form-err]", form);
     const ok = $("[data-form-ok]", form);
     const okLink = $("[data-form-link]", form);
+    const pre = new URLSearchParams(window.location.search).get("interesse");
+    if (pre && form.elements.interesse.querySelector(`option[value="${CSS.escape(pre)}"]`)) form.elements.interesse.value = pre;
     const fail = (field, msg) => {
       err.textContent = msg;
       field.setAttribute("aria-invalid", "true");
@@ -163,10 +165,10 @@
     });
   }
 
-  // Botão flutuante (mobile): aparece depois do hero, some no contato e no rodapé
+  // Botão flutuante (mobile): aparece depois do topo da página, some nas áreas de contato e no rodapé
   const fab = $("[data-fab]");
   if (fab && "IntersectionObserver" in window) {
-    const watch = [hero || $(".phead") || $(".pidx-head"), $("#contato"), $("[data-footer]")].filter(Boolean);
+    const watch = [hero || $(".phead") || $(".pidx-head") || $(".pagehead"), ...$$(".cta"), $("[data-footer]")].filter(Boolean);
     const visible = new Map();
     const io = new IntersectionObserver((entries) => {
       entries.forEach((en) => visible.set(en.target, en.isIntersecting));

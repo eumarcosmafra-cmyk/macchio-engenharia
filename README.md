@@ -1,17 +1,23 @@
-# Macchio Engenharia — novo site (v3)
+# Macchio Engenharia — novo site (v4)
 
 Redesign do site https://macchioengenharia.com.br/ (WordPress 6.1 + Elementor) como site estático: HTML, CSS e JS puros, sem framework. As páginas são geradas por um script Python a partir de um JSON com os dados das obras.
 
 - Prévia: https://macchio-engenharia.vercel.app/ (com `noindex` em `*.vercel.app`)
-- A v3 aplica o "Plano de melhorias UX/UI" enviado em 29/10/2026.
+- A v3 aplicou o "Plano de melhorias UX/UI" enviado em 29/10/2026.
+- A v4 mantém **exatamente as mesmas URLs do site atual**: cada página existente tem a sua própria página, com os mesmos slugs.
 
-## Estrutura
+## Estrutura (idêntica ao sitemap do WordPress: 22 URLs)
 
 | URL | Conteúdo |
 |---|---|
-| `/` | Hero (posicionamento + serviços + 2 CTAs + atalhos por serviço) · resumo e registros · **grade com 6 projetos** e "Ver todos" · **4 cards de serviço** (o que inclui + CTA de WhatsApp próprio) · **etapas do atendimento** em grade, cada uma com a frente correspondente · 3 depoimentos · sobre · FAQ · contato "O que você precisa resolver?" |
-| `/projetos/` | 17 projetos em grade uniforme (16:10) ou lista; filtro por tipo, com aviso para leitor de tela |
-| `/projetos/<obra>/` | Título descritivo + nome original, ficha técnica (tipo, cidade, área, escopo, execução, tipo de imagem), imagem principal sem corte, descrição real, galeria completa em 16:9 com ampliação, plantas, CTA "Solicitar um projeto semelhante" e 3 projetos relacionados |
+| `/` | Hero com posicionamento, 2 CTAs e atalhos por serviço · "Nós somos a Macchio" + registros (link para Sobre) · grade com 6 projetos (link para Portfólio) · resumo dos 4 serviços (link para Serviços) · 3 depoimentos · faixa de orçamento |
+| `/sobre/` | "Nós somos a Macchio" · história e fundador · missão, visão e valores (texto do site atual) · dados da empresa · faixa de orçamento |
+| `/servicos/` | "Nossos serviços" · 4 cards (o que inclui + WhatsApp próprio + formulário já com o serviço escolhido) · etapas do atendimento · FAQ · faixa de orçamento |
+| `/portfolio/` | 17 projetos em grade uniforme ou lista; filtro por tipo |
+| `/portfolio/<slug original>/` | As 17 páginas de projeto, com os slugs do site atual (inclusive `https-macchioengenharia-com-br-portfolio-residencia-unifamiliar-n-e-a`, mantido para não quebrar a URL indexada). Título descritivo + nome original, ficha técnica, descrição, galeria, plantas, CTA e relacionados |
+| `/contato/` | "O que você precisa resolver?" · formulário que abre o WhatsApp com a mensagem pronta (aceita `?interesse=projetos\|obras\|financiamento\|imoveis\|regularizacao`) · canais de contato |
+
+Menu igual ao atual: Início · Sobre a empresa · Serviços · Portfólio · Contato · botão **Orçamento** (para `/contato/`).
 
 ## Regras de conteúdo aplicadas
 
@@ -26,13 +32,16 @@ Redesign do site https://macchioengenharia.com.br/ (WordPress 6.1 + Elementor) c
 
 | Página | Performance | Acessibilidade | Boas práticas | SEO |
 |---|---|---|---|---|
-| Home | 97 | 100 | 100 | 100 |
-| Projetos | 97 | 100 | 100 | 100 |
-| Obra (P e R) | 99 | 100 | 100 | 100 |
+| Início | 98 | 100 | 100 | 100 |
+| Sobre | 99 | 100 | 100 | 100 |
+| Serviços | 99 | 100 | 100 | 100 |
+| Contato | 99 | 100 | 100 | 100 |
+| Portfólio | 95 | 100 | 100 | 100 |
+| Projeto (P e R) | 99 | 100 | 100 | 100 |
 
 Os números finais devem ser confirmados no PageSpeed com o domínio definitivo.
 
-Testado: menu mobile, âncoras (o header não encobre títulos), filtros, visualização em lista, galeria por teclado, toque e botões, validação e confirmação do formulário, mensagens de WhatsApp, 19 URLs do sitemap sem erro e console sem erros.
+Testado: rastreamento completo pelos links internos (as 22 páginas são alcançadas, sem link quebrado e com um H1 por página), sitemap idêntico ao do WordPress, menu mobile, filtros e lista, galeria por teclado e toque, formulário (validação, confirmação e serviço pré-selecionado), mensagens de WhatsApp e console sem erros.
 
 ## Como editar
 
@@ -57,4 +66,5 @@ Testado: menu mobile, âncoras (o header não encobre títulos), filtros, visual
 
 - Vercel: cada push na `main` atualiza o site. Framework "Other", sem build command. `_build/` e este README ficam fora do deploy (`.vercelignore`).
 - Endereços `*.vercel.app` recebem `X-Robots-Tag: noindex` (em `vercel.json`) para a prévia não competir no Google com o site atual. O domínio final não é afetado.
-- `vercel.json` traz os 301 de cada `/portfolio/<slug-antigo>/` para a nova `/projetos/<obra>/`, além de `/sobre`, `/servicos`, `/contato` e `/portfolio`.
+- As URLs são as mesmas do WordPress, então não há redirect de páginas. `vercel.json` só redireciona resíduos do WordPress (`/feed/`, `/comments/feed/`, `/author/*`, `/elementor-hf/*` → início; `/wp-sitemap.xml` → `/sitemap.xml`) e os links da prévia anterior (`/projetos/*` → `/portfolio/*`). `trailingSlash: true` mantém a barra final, como no WordPress.
+- Imagens antigas (`/wp-content/uploads/...`) não são redirecionadas. Se o Google Imagens trouxer tráfego relevante para elas, dá para mapeá-las depois.
