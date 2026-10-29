@@ -64,5 +64,6 @@ Nova obra: criar `assets/img/projetos/<slug>/01-800.webp`, `01-1600.webp`… (01
 
 ## Publicar
 
-- Vercel: projeto com **Root Directory = `sites/macchio-engenharia`**, framework "Other" e sem build command (as páginas já estão geradas). `_build/` e este README ficam fora do deploy (`.vercelignore`).
-- Outra hospedagem estática: subir a pasta (sem `_build/`) e recriar os redirects do `vercel.json`.
+- Vercel: importar este repositório (Framework Preset "Other", sem build command, root = raiz do repositório). As páginas já estão geradas. `_build/` e este README ficam fora do deploy (`.vercelignore`). Cada push na `main` atualiza o site.
+- Endereços `*.vercel.app` recebem `X-Robots-Tag: noindex` (em `vercel.json`) para a prévia não competir no Google com o site atual. O domínio final não é afetado.
+- Outra hospedagem estática: subir o conteúdo do repositório (sem `_build/`) e recriar os redirects do `vercel.json`.
