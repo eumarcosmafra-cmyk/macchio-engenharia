@@ -34,7 +34,10 @@
     "h": 450
    }
   ],
-  "plans": []
+  "plans": [],
+  "title": "Sobrado com pé-direito duplo",
+  "exec": null,
+  "image_kind": "Perspectivas 3D (renderizações)"
  },
  {
   "slug": "residencia-f-e-m",
@@ -72,7 +75,10 @@
     "h": 450
    }
   ],
-  "plans": []
+  "plans": [],
+  "title": "Sobrado com área de festas integrada",
+  "exec": null,
+  "image_kind": "Perspectivas 3D (renderizações)"
  },
  {
   "slug": "residencia-p-e-r",
@@ -82,7 +88,7 @@
   "type": "Residência unifamiliar",
   "city": "Aurora",
   "area": "225,21 m²",
-  "scope": "Projeto e execução",
+  "scope": "Projeto",
   "desc": [
    "A parte inferior do chalé possui sala de estar, copa com mesa de jantar, cozinha com churrasqueira e fogão a lenha, banheiro social e um quarto com suíte e banheira.",
    "A parte superior conta com sala de estar no mezanino com vista para a cozinha, uma suíte com closet e duas sacadas com vista panorâmica."
@@ -130,7 +136,10 @@
     "h": 450
    }
   ],
-  "plans": []
+  "plans": [],
+  "title": "Chalé com mezanino e vista panorâmica",
+  "exec": "Prevista pela Macchio",
+  "image_kind": "Perspectivas 3D (renderizações)"
  },
  {
   "slug": "residencia-l-e-g",
@@ -174,7 +183,10 @@
     "h": 450
    }
   ],
-  "plans": []
+  "plans": [],
+  "title": "Sobrado com mezanino e piscina",
+  "exec": null,
+  "image_kind": "Perspectivas 3D (renderizações)"
  },
  {
   "slug": "residencia-l-e-d",
@@ -228,7 +240,10 @@
     "h": 450
    }
   ],
-  "plans": []
+  "plans": [],
+  "title": "Casa com área gourmet integrada e piscina",
+  "exec": null,
+  "image_kind": "Perspectivas 3D (renderizações)"
  },
  {
   "slug": "multifamiliar-03",
@@ -238,7 +253,7 @@
   "type": "Residência multifamiliar",
   "city": "Rio do Sul",
   "area": "235,32 m²",
-  "scope": "Projeto e execução",
+  "scope": "Projeto",
   "desc": [
    "Cada unidade com 77,45 m², divididos em andar térreo que conta com sala de estar, jantar e cozinha conjugadas, um lavabo, e área de serviço externa.",
    "O andar superior ficou com dois quartos espaçosos e uma demi-suíte."
@@ -271,7 +286,10 @@
     "h": 450
    }
   ],
-  "plans": []
+  "plans": [],
+  "title": "Sobrados geminados de 77 m²",
+  "exec": "Prevista pela Macchio",
+  "image_kind": "Perspectivas 3D (renderizações)"
  },
  {
   "slug": "interiores-j-e-j",
@@ -314,7 +332,10 @@
     "h": 450
    }
   ],
-  "plans": []
+  "plans": [],
+  "title": "Interiores de cozinha compacta",
+  "exec": null,
+  "image_kind": "Perspectivas 3D (renderizações)"
  },
  {
   "slug": "residencia-n-e-a",
@@ -368,7 +389,10 @@
     "h": 450
    }
   ],
-  "plans": []
+  "plans": [],
+  "title": "Sobrado com deck, piscina e lareira externa",
+  "exec": null,
+  "image_kind": "Perspectivas 3D (renderizações)"
  },
  {
   "slug": "multifamiliar-01",
@@ -378,7 +402,7 @@
   "type": "Residência multifamiliar",
   "city": "Rio do Sul",
   "area": "417,79 m²",
-  "scope": "Projeto e execução",
+  "scope": "Projeto",
   "desc": [
    "Sobrados divididos em andar térreo com sala de estar e jantar conjugadas, cozinha, um lavabo, área de serviço e garagem. No andar superior ficaram três quartos, sendo um suíte com sacada, e outro somente com sacada, e um banheiro social."
   ],
@@ -426,7 +450,10 @@
     "w": 800,
     "h": 566
    }
-  ]
+  ],
+  "title": "Sobrados geminados com três quartos",
+  "exec": "Prevista pela Macchio",
+  "image_kind": "Perspectivas 3D (renderizações)"
  },
  {
   "slug": "residencia-s-e-g",
@@ -463,7 +490,10 @@
     "h": 450
    }
   ],
-  "plans": []
+  "plans": [],
+  "title": "Casa de 95 m² com planta integrada",
+  "exec": null,
+  "image_kind": "Perspectivas 3D (renderizações)"
  },
  {
   "slug": "residencia-i-e-o",
@@ -505,7 +535,10 @@
     "h": 450
    }
   ],
-  "plans": []
+  "plans": [],
+  "title": "Casa com espaço de lazer e piscina",
+  "exec": null,
+  "image_kind": "Perspectivas 3D (renderizações)"
  },
  {
   "slug": "interiores-j-e-d",
@@ -515,7 +548,7 @@
   "type": "Ampliação e interiores",
   "city": "Rio do Sul",
   "area": "106,36 m²",
-  "scope": "Ampliação e interiores",
+  "scope": "Projeto de ampliação e interiores",
   "desc": [
    "O cliente nos procurou para projetar a ampliação da sua casa, acrescentando ao espaço, mais um quarto, que a partir de agora é uma suíte, e uma ampla área de festa com sacada na parte da frente e de trás.",
    "Isso tudo na parte superior.",
@@ -569,7 +602,10 @@
     "h": 450
    }
   ],
-  "plans": []
+  "plans": [],
+  "title": "Ampliação com suíte e área de festas",
+  "exec": null,
+  "image_kind": "Perspectivas 3D (renderizações)"
  },
  {
   "slug": "residencia-m-e-l",
@@ -612,7 +648,10 @@
     "h": 450
    }
   ],
-  "plans": []
+  "plans": [],
+  "title": "Casa de três quartos com suíte e closet",
+  "exec": null,
+  "image_kind": "Perspectivas 3D (renderizações)"
  },
  {
   "slug": "residencia-a-e-l",
@@ -654,7 +693,10 @@
     "h": 450
    }
   ],
-  "plans": []
+  "plans": [],
+  "title": "Casa com espaços integrados e área de festa",
+  "exec": null,
+  "image_kind": "Perspectivas 3D (renderizações)"
  },
  {
   "slug": "multifamiliar-02",
@@ -664,7 +706,7 @@
   "type": "Residência multifamiliar",
   "city": "Rio do Sul",
   "area": "123,00 m²",
-  "scope": "Projeto e execução",
+  "scope": "Projeto",
   "desc": [
    "O projeto total ficou com 123,00 m² e cada geminada conta com 61,50 m², divididos em parte inferior com garagem para dois carros e escada para o segundo piso.",
    "E o segundo piso conta com sala de estar, jantar e cozinha conjugadas, sacada com churrasqueira, área de serviço, banheiro social e dois quartos, sendo um suíte."
@@ -708,7 +750,10 @@
     "w": 800,
     "h": 566
    }
-  ]
+  ],
+  "title": "Geminados com garagem e sacada com churrasqueira",
+  "exec": "Prevista pela Macchio",
+  "image_kind": "Perspectivas 3D (renderizações)"
  },
  {
   "slug": "multifamiliar-04",
@@ -751,7 +796,10 @@
     "h": 450
    }
   ],
-  "plans": []
+  "plans": [],
+  "title": "Casas geminadas com pé-direito de 3,30 m",
+  "exec": null,
+  "image_kind": "Perspectivas 3D (renderizações)"
  },
  {
   "slug": "residencia-n-e-c",
@@ -789,6 +837,9 @@
     "h": 450
    }
   ],
-  "plans": []
+  "plans": [],
+  "title": "Casa com três suítes e terraço",
+  "exec": null,
+  "image_kind": "Perspectivas 3D (renderizações)"
  }
 ]
