@@ -5,6 +5,7 @@ Lê _build/projetos.json e escreve as mesmas URLs do site atual (WordPress):
   /  ·  /sobre/  ·  /servicos/  ·  /portfolio/  ·  /portfolio/<slug-original>/  ·  /contato/
 além de sitemap.xml e das imagens OG dos projetos.
 """
+import hashlib
 import html
 import json
 import shutil
@@ -14,6 +15,12 @@ from urllib.parse import quote
 from PIL import Image, ImageOps
 
 ROOT = Path(__file__).resolve().parent.parent
+
+
+def asset_v(rel):
+    """Versão do arquivo (hash do conteúdo) para quebrar o cache do navegador a cada alteração."""
+    return hashlib.md5((ROOT / rel).read_bytes()).hexdigest()[:10]
+
 SITE = "https://macchioengenharia.com.br/"
 WA_NUMBER = "5547991723557"
 PHONE_HREF = "tel:+5547991723557"
@@ -146,8 +153,8 @@ def head(prefix, title, desc, path, og_image, jsonld, preload=""):
   <meta name="twitter:card" content="summary_large_image">
   <script>document.documentElement.classList.replace("no-js", "js")</script>
   <link rel="preload" href="{prefix}assets/fonts/geist-latin.woff2" as="font" type="font/woff2" crossorigin>
-{preload}  <link rel="stylesheet" href="{prefix}assets/css/site.css">
-  <script src="{prefix}assets/js/site.js" defer></script>
+{preload}  <link rel="stylesheet" href="{prefix}assets/css/site.css?v={asset_v("assets/css/site.css")}">
+  <script src="{prefix}assets/js/site.js?v={asset_v("assets/js/site.js")}" defer></script>
   <!-- Google Tag Manager / GA4: inserir o snippet aqui. Os cliques de CTA já vão para o dataLayer (evento "cta_click"). -->
   <script type="application/ld+json">
 {json.dumps(jsonld, ensure_ascii=False, indent=2)}
